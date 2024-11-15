@@ -89,6 +89,8 @@
 
 Also uses:
 - Nodemailer
+- Argon2
+- Jsonwebtoken
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
