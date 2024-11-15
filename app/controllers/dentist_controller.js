@@ -1,10 +1,33 @@
 const dentists = require("../models/dentists");
 const clinics = require("../models/clinics");
-
+const { buildFilter } = require("../filterHelper");
 // GET all dentists
+
 const get_dentists = async (ctx) => {
   try {
-    const allEntries = await dentists.find({});
+    const { id } = ctx.params;
+
+    if (id) {
+      const dentist = await dentists
+        .findById(id)
+        .populate("clinic appointments");
+      if (!dentist) {
+        ctx.status = 404;
+        ctx.body = { message: "Dentist not found 🦷" };
+        return;
+      }
+      ctx.status = 200;
+      ctx.body = dentist;
+      return;
+    }
+
+    const filter = buildFilter(ctx.query, [
+      "name",
+      "position",
+      "email",
+      "clinic",
+    ]);
+    const allEntries = await dentists.find(filter);
     if (!allEntries.length) {
       ctx.status = 404;
       ctx.body = { message: "No dentists found 🦷" };
@@ -18,7 +41,6 @@ const get_dentists = async (ctx) => {
     ctx.body = { error: "Internal Server Error" };
   }
 };
-
 // POST a new dentist
 const post_dentist = async (ctx) => {
   try {
