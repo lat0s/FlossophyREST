@@ -106,19 +106,37 @@ Following the guide with steps listed below will help you run this application.
    ```sh
    git clone https://github.com/lat0s/FlossophyREST.git
    ```
+
+<br>
+
 2. Navigate to `/app` directory, open a new terminal and write the following command
 
    ```sh
    npm install
    ```
 
+<br>
+
 3. Create a new empty file named `.env`
 
-4. Enter the following in `.env` can be either a locally host MongoDB or Atlas.
+<br>
+
+4. Enter the following in `.env`
    ```js
+   SMTP_SERVICE=<YOUR_SERVICE>
+   SMTP_USER=<YOUR_EMAIL>
+   SMTP_PASS=<YOUR_PASS>
+   EMAIL_FROM=<YOUR_EMAIL>
    MONGODB_URI=<YOUR_MONGODB_URI>";
    ```
-5. Run the application
+
+<br>
+
+5. Look [here](https://medium.com/@deepbag/how-to-send-mail-using-nodemailer-for-free-f8e3df6f7cf6) for more information. I personally used Gmail and followed the instructions on the link. If u follow the guide then the password in `SMPT_PASS` should be the one u copied from the App Password. The `SMTP_USER` should be the Gmail address and the `SMTP_SERVICE=gmail`.
+
+<br>
+
+6. Run the application
    ```sh
    node app.js
    ```
