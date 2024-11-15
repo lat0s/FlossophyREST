@@ -1,9 +1,25 @@
 const patients = require("../models/patients.js");
+const { buildFilter } = require("../filterHelper");
 
 // GET all patients
 const get_patients = async (ctx) => {
   try {
-    const allEntries = await patients.find({});
+    const { id } = ctx.params;
+
+    if (id) {
+      const patient = await patients.findById(id);
+      if (!patient) {
+        ctx.status = 404;
+        ctx.body = { message: "Patient not found 👥" };
+        return;
+      }
+      ctx.status = 200;
+      ctx.body = patient;
+      return;
+    }
+
+    const filter = buildFilter(ctx.query, ["name", "email"]);
+    const allEntries = await patients.find(filter);
     if (!allEntries.length) {
       ctx.status = 404;
       ctx.body = { message: "No patients found 👥" };
