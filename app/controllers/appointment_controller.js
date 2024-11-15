@@ -2,18 +2,19 @@ const dentists = require("../models/dentists.js");
 const appointments = require("../models/appointments.js");
 const { buildFilter } = require("../filterHelper");
 
-// GET all appointments
+// GET all appointments or filter appointments
 const get_appointments = async (ctx) => {
   try {
     const { id } = ctx.params;
 
+    // Fetch by ID
     if (id) {
       const appointment = await appointments
         .findById(id)
         .populate("dentist clinic patient");
       if (!appointment) {
         ctx.status = 404;
-        ctx.body = { message: "Appointment not found 📅" };
+        ctx.body = { error: "Appointment not found" };
         return;
       }
       ctx.status = 200;
@@ -21,6 +22,7 @@ const get_appointments = async (ctx) => {
       return;
     }
 
+    // Fetch all or filtered results
     const filter = buildFilter(ctx.query, [
       "date",
       "time",
@@ -29,14 +31,14 @@ const get_appointments = async (ctx) => {
       "clinic",
       "patient",
     ]);
-    const allEntries = await appointments.find(filter);
-    if (!allEntries.length) {
-      ctx.status = 404;
-      ctx.body = { message: "No appointments found 📅" };
-      return;
-    }
+    const allEntries = await appointments
+      .find(filter)
+      .populate("dentist clinic patient");
     ctx.status = 200;
-    ctx.body = allEntries;
+    ctx.body = {
+      count: allEntries.length,
+      appointments: allEntries,
+    };
   } catch (error) {
     console.error("❌ Error getting appointments:", error.message);
     ctx.status = 500;
@@ -47,22 +49,40 @@ const get_appointments = async (ctx) => {
 // POST a new appointment
 const post_appointment = async (ctx) => {
   try {
-    const data = ctx.request.body;
-    const appointment = new appointments(data);
-    await appointment.save();
+    const { date, time, status, dentist, clinic, patient } = ctx.request.body;
 
-    const dentist = await dentists.findById(data.dentist);
-    if (!dentist) {
-      ctx.status = 404;
-      ctx.body = { message: "Dentist not found 🦷" };
+    // Validate required fields
+    if (!date || !time || !status || !dentist || !clinic) {
+      ctx.status = 400;
+      ctx.body = { error: "Missing required fields" };
       return;
     }
 
-    dentist.appointments.push(appointment._id);
-    await dentist.save();
+    const dentistExists = await dentists.findById(dentist);
+    if (!dentistExists) {
+      ctx.status = 404;
+      ctx.body = { error: "Dentist not found" };
+      return;
+    }
+
+    const appointment = new appointments({
+      date,
+      time,
+      status,
+      dentist,
+      clinic,
+      patient: patient || null,
+    });
+
+    await appointment.save();
+    dentistExists.appointments.push(appointment._id);
+    await dentistExists.save();
 
     ctx.status = 201;
-    ctx.body = { message: "Appointment created successfully 📅", appointment };
+    ctx.body = {
+      message: "Appointment created successfully",
+      appointment,
+    };
   } catch (error) {
     console.error("❌ Error creating appointment:", error.message);
     ctx.status = 500;
@@ -74,21 +94,29 @@ const post_appointment = async (ctx) => {
 const update_appointment = async (ctx) => {
   try {
     const { id } = ctx.params;
-    const data = ctx.request.body;
+    const updateData = ctx.request.body;
 
-    const updatedAppointment = await appointments.findByIdAndUpdate(id, data, {
-      new: true,
-    });
+    // Validate presence of update fields
+    if (!updateData || Object.keys(updateData).length === 0) {
+      ctx.status = 400;
+      ctx.body = { error: "No data provided for update" };
+      return;
+    }
+
+    const updatedAppointment = await appointments
+      .findByIdAndUpdate(id, updateData, { new: true })
+      .populate("dentist clinic patient");
+
     if (!updatedAppointment) {
       ctx.status = 404;
-      ctx.body = { message: "Appointment not found 📅" };
+      ctx.body = { error: "Appointment not found" };
       return;
     }
 
     ctx.status = 200;
     ctx.body = {
-      message: "Appointment updated successfully 📅",
-      updatedAppointment,
+      message: "Appointment updated successfully",
+      appointment: updatedAppointment,
     };
   } catch (error) {
     console.error("❌ Error updating appointment:", error.message);
@@ -102,15 +130,18 @@ const delete_appointments = async (ctx) => {
   try {
     const { id } = ctx.params;
 
-    const deleted = await appointments.findByIdAndDelete(id);
-    if (!deleted) {
+    const deletedAppointment = await appointments.findByIdAndDelete(id);
+    if (!deletedAppointment) {
       ctx.status = 404;
-      ctx.body = { message: "Appointment not found 📅" };
+      ctx.body = { error: "Appointment not found" };
       return;
     }
 
     ctx.status = 200;
-    ctx.body = { message: "Appointment deleted successfully 📅" };
+    ctx.body = {
+      message: "Appointment deleted successfully",
+      appointment: deletedAppointment,
+    };
   } catch (error) {
     console.error("❌ Error deleting appointment:", error.message);
     ctx.status = 500;
