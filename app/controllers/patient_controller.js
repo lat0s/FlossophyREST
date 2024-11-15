@@ -1,52 +1,58 @@
-const patients = require("../models/patients.js");
+const patients = require("../models/patients");
+const { buildFilter } = require("../filterHelper");
 
-// GET all patients
+// GET all patients or filter patients
 const get_patients = async (ctx) => {
   try {
-    const allEntries = await patients.find({});
-    if (!allEntries.length) {
-      ctx.status = 404;
-      ctx.body = { message: "No patients found 👥" };
+    const { id } = ctx.params;
+
+    // Fetch by ID
+    if (id) {
+      const patient = await patients.findById(id);
+      if (!patient) {
+        ctx.status = 404;
+        ctx.body = { error: "Patient not found" };
+        return;
+      }
+      ctx.status = 200;
+      ctx.body = patient;
       return;
     }
+
+    // Fetch all or filtered results
+    const filter = buildFilter(ctx.query, ["name", "email"]);
+    const allEntries = await patients.find(filter);
     ctx.status = 200;
-    ctx.body = allEntries;
+    ctx.body = {
+      count: allEntries.length,
+      patients: allEntries,
+    };
   } catch (error) {
-    console.error("❌ Error getting patients:", error.message);
+    console.error("❌ Error retrieving patients:", error.message);
     ctx.status = 500;
     ctx.body = { error: "Internal Server Error" };
   }
 };
 
-// LOGIN
-const login_patient = async (ctx) => {
-  try {
-    const { email, password } = ctx.request.body;
-
-    const patient = await patients.findOne({ email, password });
-    if (!patient) {
-      ctx.status = 401;
-      ctx.body = { error: "Invalid credentials" };
-      return;
-    }
-
-    ctx.status = 200;
-    ctx.body = { message: "Login successful 👤", patient };
-  } catch (error) {
-    console.error("❌ Login error:", error.message);
-    ctx.status = 500;
-    ctx.body = { error: "Internal Server Error" };
-  }
-};
-
-// CREATE a new patient
+// POST a new patient
 const post_patients = async (ctx) => {
   try {
-    const data = ctx.request.body;
-    const patient = new patients(data);
+    const { name, email, password } = ctx.request.body;
+
+    if (!name || !email || !password) {
+      ctx.status = 400;
+      ctx.body = { error: "Missing required fields" };
+      return;
+    }
+
+    const patient = new patients({ name, email, password });
     await patient.save();
+
     ctx.status = 201;
-    ctx.body = { message: "Patient created successfully 👤", patient };
+    ctx.body = {
+      message: "Patient created successfully",
+      patient,
+    };
   } catch (error) {
     console.error("❌ Error creating patient:", error.message);
     ctx.status = error.code === 11000 ? 400 : 500;
@@ -58,19 +64,28 @@ const post_patients = async (ctx) => {
 const update_patient = async (ctx) => {
   try {
     const { id } = ctx.params;
-    const data = ctx.request.body;
+    const updateData = ctx.request.body;
 
-    const updatedPatient = await patients.findByIdAndUpdate(id, data, {
+    if (!updateData || Object.keys(updateData).length === 0) {
+      ctx.status = 400;
+      ctx.body = { error: "No data provided for update" };
+      return;
+    }
+
+    const updatedPatient = await patients.findByIdAndUpdate(id, updateData, {
       new: true,
     });
     if (!updatedPatient) {
       ctx.status = 404;
-      ctx.body = { message: "Patient not found 👤" };
+      ctx.body = { error: "Patient not found" };
       return;
     }
 
     ctx.status = 200;
-    ctx.body = { message: "Patient updated successfully 👤", updatedPatient };
+    ctx.body = {
+      message: "Patient updated successfully",
+      patient: updatedPatient,
+    };
   } catch (error) {
     console.error("❌ Error updating patient:", error.message);
     ctx.status = 500;
@@ -83,15 +98,18 @@ const delete_patient = async (ctx) => {
   try {
     const { id } = ctx.params;
 
-    const deleted = await patients.findByIdAndDelete(id);
-    if (!deleted) {
+    const deletedPatient = await patients.findByIdAndDelete(id);
+    if (!deletedPatient) {
       ctx.status = 404;
-      ctx.body = { message: "Patient not found 👤" };
+      ctx.body = { error: "Patient not found" };
       return;
     }
 
     ctx.status = 200;
-    ctx.body = { message: "Patient deleted successfully 👤" };
+    ctx.body = {
+      message: "Patient deleted successfully",
+      patient: deletedPatient,
+    };
   } catch (error) {
     console.error("❌ Error deleting patient:", error.message);
     ctx.status = 500;
@@ -101,7 +119,6 @@ const delete_patient = async (ctx) => {
 
 module.exports = {
   get_patients,
-  login_patient,
   post_patients,
   update_patient,
   delete_patient,
