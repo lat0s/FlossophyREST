@@ -6,19 +6,31 @@ const { buildFilter } = require("../filterHelper");
 const get_appointments = async (ctx) => {
   try {
     const { id } = ctx.params;
+    const { fields } = ctx.query;
+
+    const selectFields = fields ? fields.split(",").join(" ") : "";
 
     // Fetch by ID
     if (id) {
       const appointment = await appointments
         .findById(id)
+        .select(selectFields)
         .populate("dentist clinic patient");
+
       if (!appointment) {
         ctx.status = 404;
         ctx.body = { error: "Appointment not found" };
         return;
       }
+
       ctx.status = 200;
-      ctx.body = appointment;
+      ctx.body = fields
+        ? Object.fromEntries(
+            Object.entries(appointment.toObject()).filter(([key]) =>
+              fields.split(",").includes(key)
+            )
+          )
+        : appointment;
       return;
     }
 
@@ -33,11 +45,21 @@ const get_appointments = async (ctx) => {
     ]);
     const allEntries = await appointments
       .find(filter)
+      .select(selectFields)
       .populate("dentist clinic patient");
+
     ctx.status = 200;
     ctx.body = {
       count: allEntries.length,
-      appointments: allEntries,
+      appointments: allEntries.map((appointment) =>
+        fields
+          ? Object.fromEntries(
+              Object.entries(appointment.toObject()).filter(([key]) =>
+                fields.split(",").includes(key)
+              )
+            )
+          : appointment
+      ),
     };
   } catch (error) {
     console.error("❌ Error getting appointments:", error.message);
