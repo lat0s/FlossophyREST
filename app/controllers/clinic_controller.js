@@ -1,10 +1,32 @@
 const clinics = require("../models/clinics.js");
 const patients = require("../models/patients.js");
+const { buildFilter } = require("../filterHelper");
 
 // GET all clinics
 const get_clinics = async (ctx) => {
   try {
-    const allEntries = await clinics.find({});
+    const { id } = ctx.params;
+
+    if (id) {
+      const clinic = await clinics.findById(id).populate("dentists");
+      if (!clinic) {
+        ctx.status = 404;
+        ctx.body = { message: "Clinic not found 🏥" };
+        return;
+      }
+      ctx.status = 200;
+      ctx.body = clinic;
+      return;
+    }
+
+    const filter = buildFilter(ctx.query, [
+      "name",
+      "address",
+      "lng",
+      "lat",
+      "dentists",
+    ]);
+    const allEntries = await clinics.find(filter);
     if (!allEntries.length) {
       ctx.status = 404;
       ctx.body = { message: "No clinics found 🏥" };
