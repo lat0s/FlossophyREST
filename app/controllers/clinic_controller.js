@@ -6,17 +6,31 @@ const { buildFilter } = require("../filterHelper");
 const get_clinics = async (ctx) => {
   try {
     const { id } = ctx.params;
+    const { fields } = ctx.query;
+
+    const selectFields = fields ? fields.split(",").join(" ") : "";
 
     // Fetch by ID
     if (id) {
-      const clinic = await clinics.findById(id).populate("dentists");
+      const clinic = await clinics
+        .findById(id)
+        .select(selectFields)
+        .populate("dentists");
+
       if (!clinic) {
         ctx.status = 404;
         ctx.body = { error: "Clinic not found" };
         return;
       }
+
       ctx.status = 200;
-      ctx.body = clinic;
+      ctx.body = fields
+        ? Object.fromEntries(
+            Object.entries(clinic.toObject()).filter(([key]) =>
+              fields.split(",").includes(key)
+            )
+          )
+        : clinic;
       return;
     }
 
@@ -28,11 +42,23 @@ const get_clinics = async (ctx) => {
       "lat",
       "dentists",
     ]);
-    const allEntries = await clinics.find(filter).populate("dentists");
+    const allEntries = await clinics
+      .find(filter)
+      .select(selectFields)
+      .populate("dentists");
+
     ctx.status = 200;
     ctx.body = {
       count: allEntries.length,
-      clinics: allEntries,
+      clinics: allEntries.map((clinic) =>
+        fields
+          ? Object.fromEntries(
+              Object.entries(clinic.toObject()).filter(([key]) =>
+                fields.split(",").includes(key)
+              )
+            )
+          : clinic
+      ),
     };
   } catch (error) {
     console.error("❌ Error retrieving clinics:", error.message);

@@ -72,27 +72,47 @@ const login_patient = async (ctx) => {
 const get_patients = async (ctx) => {
   try {
     const { id } = ctx.params;
+    const { fields } = ctx.query;
+
+    const selectFields = fields ? fields.split(",").join(" ") : "";
 
     // Fetch by ID
     if (id) {
-      const patient = await patients.findById(id);
+      const patient = await patients.findById(id).select(selectFields);
+
       if (!patient) {
         ctx.status = 404;
         ctx.body = { error: "Patient not found" };
         return;
       }
+
       ctx.status = 200;
-      ctx.body = patient;
+      ctx.body = fields
+        ? Object.fromEntries(
+            Object.entries(patient.toObject()).filter(([key]) =>
+              fields.split(",").includes(key)
+            )
+          )
+        : patient;
       return;
     }
 
     // Fetch all or filtered results
     const filter = buildFilter(ctx.query, ["name", "email"]);
-    const allEntries = await patients.find(filter);
+    const allEntries = await patients.find(filter).select(selectFields);
+
     ctx.status = 200;
     ctx.body = {
       count: allEntries.length,
-      patients: allEntries,
+      patients: allEntries.map((patient) =>
+        fields
+          ? Object.fromEntries(
+              Object.entries(patient.toObject()).filter(([key]) =>
+                fields.split(",").includes(key)
+              )
+            )
+          : patient
+      ),
     };
   } catch (error) {
     console.error("❌ Error retrieving patients:", error.message);
@@ -100,7 +120,6 @@ const get_patients = async (ctx) => {
     ctx.body = { error: "Internal Server Error" };
   }
 };
-
 // POST a new patient (Registration)
 const post_patients = async (ctx) => {
   try {
