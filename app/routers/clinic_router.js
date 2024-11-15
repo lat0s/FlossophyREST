@@ -1,7 +1,6 @@
 const Router = require("koa-router");
 const {
   get_clinics,
-  get_patients,
   post_clinics,
   update_clinic,
   delete_clinic,
@@ -12,7 +11,6 @@ const router = new Router({ prefix: "/clinic" });
 // Define routes
 router.get("/", get_clinics); // Get all or filtered clinics
 router.get("/:id", get_clinics); // Get a specific clinic by ID
-router.get("/patients", get_patients); // Get patients related to clinics
 router.post("/", post_clinics); // Create a new clinic
 router.put("/:id", update_clinic); // Update a clinic by ID
 router.delete("/:id", delete_clinic); // Delete a clinic by ID
