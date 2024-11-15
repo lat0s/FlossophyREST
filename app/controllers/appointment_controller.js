@@ -1,10 +1,35 @@
 const dentists = require("../models/dentists.js");
 const appointments = require("../models/appointments.js");
+const { buildFilter } = require("../filterHelper");
 
 // GET all appointments
 const get_appointments = async (ctx) => {
   try {
-    const allEntries = await appointments.find({});
+    const { id } = ctx.params;
+
+    if (id) {
+      const appointment = await appointments
+        .findById(id)
+        .populate("dentist clinic patient");
+      if (!appointment) {
+        ctx.status = 404;
+        ctx.body = { message: "Appointment not found 📅" };
+        return;
+      }
+      ctx.status = 200;
+      ctx.body = appointment;
+      return;
+    }
+
+    const filter = buildFilter(ctx.query, [
+      "date",
+      "time",
+      "status",
+      "dentist",
+      "clinic",
+      "patient",
+    ]);
+    const allEntries = await appointments.find(filter);
     if (!allEntries.length) {
       ctx.status = 404;
       ctx.body = { message: "No appointments found 📅" };
