@@ -15,7 +15,9 @@
   "author": "lat0s",
   "license": "Apache-2.0",
   "dependencies": {
+    "argon2": "^0.41.1",
     "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.2",
     "koa": "^2.15.3",
     "koa-bodyparser": "^4.4.1",
     "koa-helmet": "^7.1.0",
