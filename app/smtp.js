@@ -45,7 +45,10 @@ async function sendEmail(
     };
 
     let patientInfo = await transporter.sendMail(patientMailOptions);
-    console.log("Patient email sent: ", patientInfo.messageId);
+    console.log(
+      "Patient email sent: ",
+      patientInfo.messageId + " to " + patientEmail
+    );
 
     // Send email to the dentist
     let dentistMailOptions = {
@@ -56,7 +59,10 @@ async function sendEmail(
     };
 
     let dentistInfo = await transporter.sendMail(dentistMailOptions);
-    console.log("Dentist email sent: ", dentistInfo.messageId);
+    console.log(
+      "Dentist email sent: ",
+      dentistInfo.messageId + " to " + dentistEmail
+    );
 
     return { patient: patientInfo.messageId, dentist: dentistInfo.messageId };
   } catch (error) {
