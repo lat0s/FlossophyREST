@@ -6,11 +6,11 @@ const bodyParser = require("koa-bodyparser");
 const helmet = require("koa-helmet");
 const logger = require("koa-logger");
 
-// Routers
-// const dentistRouter = require("./routers/dentist_router");
-// const appointmentRouter = require("./routers/appointment_router");
-// const clinicRouter = require("./routers/clinic_router");
-// const patientRouter = require("./routers/patient_router");
+const dentistRouter = require("./routers/dentist_router");
+const appointmentRouter = require("./routers/appointment_router");
+const clinicRouter = require("./routers/clinic_router");
+const patientRouter = require("./routers/patient_router");
+const emailRouter = require("./routers/email_router");
 
 dotenv.config();
 
@@ -40,11 +40,12 @@ router.get("/", async (ctx) => {
   ctx.body = { message: "API is running 🚀" };
 });
 
-// // Use Routers
-// app.use(dentistRouter.routes()).use(dentistRouter.allowedMethods());
-// app.use(appointmentRouter.routes()).use(appointmentRouter.allowedMethods());
-// app.use(clinicRouter.routes()).use(clinicRouter.allowedMethods());
-// app.use(patientRouter.routes()).use(patientRouter.allowedMethods());
+// Use Routers
+app.use(dentistRouter.routes()).use(dentistRouter.allowedMethods());
+app.use(appointmentRouter.routes()).use(appointmentRouter.allowedMethods());
+app.use(clinicRouter.routes()).use(clinicRouter.allowedMethods());
+app.use(patientRouter.routes()).use(patientRouter.allowedMethods());
+app.use(emailRouter.routes()).use(emailRouter.allowedMethods());
 
 // Global Error Handling
 app.use(async (ctx, next) => {
