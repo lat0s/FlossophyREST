@@ -6,32 +6,61 @@ const { buildFilter } = require("../filterHelper");
 const get_dentists = async (ctx) => {
   try {
     const { id } = ctx.params;
+    const { fields } = ctx.query;
 
-    // Fetch by ID
+    // Fields selection for limiting returned data
+    const selectFields = fields ? fields.split(",").join(" ") : "";
+
+    // Fetch by ID with selected fields
     if (id) {
-      const dentist = await dentists.findById(id).populate("clinic");
+      const dentist = await dentists
+        .findById(id)
+        .select(selectFields)
+        .populate("clinic");
+
       if (!dentist) {
         ctx.status = 404;
         ctx.body = { error: "Dentist not found" };
         return;
       }
+
+      // Only include the selected fields in the response
       ctx.status = 200;
-      ctx.body = dentist;
+      ctx.body = fields
+        ? Object.fromEntries(
+            Object.entries(dentist.toObject()).filter(([key]) =>
+              fields.split(",").includes(key)
+            )
+          )
+        : dentist;
       return;
     }
 
-    // Fetch all or filtered results
+    // Fetch all or filtered results with selected fields
     const filter = buildFilter(ctx.query, [
       "name",
       "position",
       "email",
       "clinic",
     ]);
-    const allEntries = await dentists.find(filter).populate("clinic");
+    const allEntries = await dentists
+      .find(filter)
+      .select(selectFields)
+      .populate("clinic");
+
+    // Only include the selected fields in the response
     ctx.status = 200;
     ctx.body = {
       count: allEntries.length,
-      dentists: allEntries,
+      dentists: allEntries.map((dentist) =>
+        fields
+          ? Object.fromEntries(
+              Object.entries(dentist.toObject()).filter(([key]) =>
+                fields.split(",").includes(key)
+              )
+            )
+          : dentist
+      ),
     };
   } catch (error) {
     console.error("❌ Error retrieving dentists:", error.message);
