@@ -12,7 +12,7 @@ const router = new Router({ prefix: "/clinic" });
 router.get("/", get_clinics); // Get all or filtered clinics
 router.get("/:id", get_clinics); // Get a specific clinic by ID
 router.post("/", post_clinics); // Create a new clinic
-router.put("/:id", update_clinic); // Update a clinic by ID
+router.patch("/:id", update_clinic); // Update a clinic by ID
 router.delete("/:id", delete_clinic); // Delete a clinic by ID
 
 module.exports = router;

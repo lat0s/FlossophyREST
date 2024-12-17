@@ -12,7 +12,7 @@ const router = new Router({ prefix: "/appointment" });
 router.get("/", get_appointments); // Get all or filtered appointments
 router.get("/:id", get_appointments); // Get a specific appointment by ID
 router.post("/", post_appointment); // Create a new appointment
-router.put("/:id", update_appointment); // Update an appointment by ID
+router.patch("/:id", update_appointment); // Update an appointment by ID
 router.delete("/:id", delete_appointments); // Delete an appointment by ID
 
 module.exports = router;
