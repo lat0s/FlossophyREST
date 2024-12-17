@@ -21,14 +21,14 @@ const dentistSchema = new Schema({
     },
     clinic: [{
         type: Schema.Types.ObjectId,
-        ref: 'clinics'
+        ref: 'Clinic' 
     }],
     
     appointments: [{
         type: Schema.Types.ObjectId,
-        ref: 'appointments'
+        ref: 'Appointment' 
     }]
 });
 
-const Dentist = mongoose.model('dentists', dentistSchema);
+const Dentist = mongoose.model('Dentist', dentistSchema); 
 module.exports = Dentist;
