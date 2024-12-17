@@ -19,17 +19,17 @@ const appointmentSchema = new Schema({
     },
     dentist: {
         type: Schema.Types.ObjectId,
-        ref: 'Dentist',
+        ref: 'Dentist', 
         required: true
     },
-	clinic: {
-		type: Schema.Types.ObjectId,
-        ref: 'Clinic',
+    clinic: {
+        type: Schema.Types.ObjectId,
+        ref: 'Clinic', 
         required: true
-	},
+    },
     patient: {
         type: Schema.Types.ObjectId,
-        ref: 'Patient',
+        ref: 'Patient', 
         default: null
     }
 }, { timestamps: true });
