@@ -122,11 +122,11 @@ Following the guide with steps listed below will help you run this application.
 
 <br>
 
-3. Create a new empty file named `.env`
+3. Create a new empty file named `.env` or rename `.env.example` => `.env`
 
 <br>
 
-4. Enter the following in `.env`
+4. Enter the following in `.env` (skip if you renamed the `.env.example`)
    ```js
    SMTP_SERVICE=<YOUR_SERVICE>
    SMTP_USER=<YOUR_EMAIL>
